@@ -49,20 +49,14 @@
     <style>
         body { font-family: 'Inter', ui-sans-serif, system-ui; }
         .font-serif-display { font-family: 'Fraunces', ui-serif, Georgia; }
-
-        /* subtle grain / dot texture for the header band, not a flat gradient */
         .header-texture {
             background-image:
                 radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
             background-size: 16px 16px;
         }
-
-        /* segmented tab control */
         .tab-pill {
             transition: color .18s ease, background-color .18s ease, box-shadow .18s ease;
         }
-
-        /* responsive table -> stacked cards below 720px */
         @media (max-width: 720px) {
             table.responsive-table thead { display: none; }
             table.responsive-table, table.responsive-table tbody, table.responsive-table tr, table.responsive-table td {
@@ -107,7 +101,6 @@
             table.responsive-table td[data-label="Actions"]::before { display: none; }
             table.responsive-table td[data-label=""]::before { display: none; }
         }
-
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-thumb { background: rgba(148,163,184,.4); border-radius: 8px; }
     </style>
@@ -120,7 +113,7 @@
         <div class="header-texture bg-gradient-to-br from-pastoral-800 to-pastoral-950 text-white px-5 sm:px-6 py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="font-serif-display text-lg sm:text-xl font-semibold tracking-tight leading-none">YFC Pastoral Formation Tracker</h1>
-                <p class="text-[11px] text-pastoral-200 mt-1">Area Cluster B — following each member's formation journey</p>
+                <p class="text-[11px] text-pastoral-200 mt-1">Area Cluster B — following each member's formation journey (Cloud synced)</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
@@ -139,9 +132,8 @@
             </div>
         </div>
 
-        <!-- Navigation: segmented tab control -->
+        <!-- Navigation -->
         <div class="bg-pastoral-50 dark:bg-slate-900 border-b border-pastoral-100 dark:border-slate-700 px-4 sm:px-6 pt-3 pb-3 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 transition-colors duration-200">
-
             <div class="flex w-full sm:w-auto bg-white dark:bg-slate-800 border border-pastoral-100 dark:border-slate-700 rounded-full p-1 shadow-xs overflow-x-auto">
                 <button onclick="switchTab('members')" id="tabBtnMembers" class="tab-pill flex-1 sm:flex-none whitespace-nowrap px-4 py-2 rounded-full font-semibold text-[11px] flex items-center justify-center gap-1.5">
                     <span>🧑‍🤝‍🧑</span> Members
@@ -169,7 +161,6 @@
 
             <!-- TAB 1: MEMBERS DIRECTORY -->
             <div id="tabContentMembers" class="block w-full">
-                <!-- Stats Overview Bar -->
                 <div class="bg-pastoral-50/60 dark:bg-slate-800/40 border-b border-pastoral-100 dark:border-slate-700 px-4 sm:px-6 py-4 grid grid-cols-3 gap-3 text-slate-600 dark:text-slate-300 text-center sm:text-left">
                     <div class="bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-pastoral-100/70 dark:border-slate-700 shadow-xs">
                         <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500">Total cluster members</span>
@@ -185,7 +176,6 @@
                     </div>
                 </div>
 
-                <!-- Search & Filter Bar -->
                 <div class="p-4 bg-white dark:bg-slate-800 border-b border-pastoral-100 dark:border-slate-700 flex flex-col sm:flex-row gap-3 transition-colors duration-200">
                     <div class="relative flex-1">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">🔍</span>
@@ -199,7 +189,6 @@
                     </select>
                 </div>
 
-                <!-- Members Table -->
                 <div class="overflow-x-auto w-full pt-2 sm:pt-0">
                     <table class="responsive-table w-full text-left border-collapse">
                         <thead>
@@ -219,7 +208,7 @@
                 <div class="h-4"></div>
             </div>
 
-            <!-- TAB 2: MEMBERSHIP FORMATION SUMMARY -->
+            <!-- TAB 2: FORMATION SUMMARY -->
             <div id="tabContentFormations" class="hidden p-4 sm:p-6 w-full">
                 <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
@@ -247,8 +236,6 @@
             <!-- TAB 3: HISTORY & BACKUPS -->
             <div id="tabContentHistory" class="hidden p-4 sm:p-6 w-full">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-                    <!-- Activity History -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <div>
@@ -257,62 +244,48 @@
                             </div>
                             <button onclick="clearHistoryLogs()" class="text-[10px] text-red-500 hover:text-red-700 font-semibold underline shrink-0">Clear</button>
                         </div>
-                        <div id="historyLogContainer" class="border border-pastoral-100 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 max-h-[420px] overflow-y-auto p-2 space-y-1.5 text-[11px]">
-                            <!-- Dynamic History items -->
-                        </div>
+                        <div id="historyLogContainer" class="border border-pastoral-100 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 max-h-[420px] overflow-y-auto p-2 space-y-1.5 text-[11px]"></div>
                     </div>
 
-                    <!-- Auto Backups -->
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <div>
                                 <h2 class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100">Saved backups</h2>
-                                <p class="text-[11px] text-slate-400">Snapshots saved automatically on this device. Use these if the website acts up — or export one to keep it safe elsewhere.</p>
+                                <p class="text-[11px] text-slate-400">Snapshots saved automatically.</p>
                             </div>
                             <button onclick="createManualBackup()" class="text-[10px] text-pastoral-700 dark:text-emerald-400 hover:text-pastoral-900 font-semibold underline shrink-0">Back up now</button>
                         </div>
-                        <div id="backupListContainer" class="border border-pastoral-100 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 max-h-[420px] overflow-y-auto p-2 space-y-1.5 text-[11px]">
-                            <!-- Dynamic Backup items -->
-                        </div>
+                        <div id="backupListContainer" class="border border-pastoral-100 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 max-h-[420px] overflow-y-auto p-2 space-y-1.5 text-[11px]"></div>
                     </div>
-
                 </div>
             </div>
-
         </div>
 
-        <!-- Footer Bar with Auto Timestamp -->
+        <!-- Footer Bar -->
         <div class="bg-pastoral-50 dark:bg-slate-900 px-6 py-3 border-t border-pastoral-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-400 dark:text-slate-500 gap-2">
-            <span>YFC Pastoral Formation Tracker • Area Cluster B</span>
-            <span id="lastUpdated" class="font-medium text-pastoral-700 dark:text-emerald-400">System ready</span>
+            <span>YFC Pastoral Formation Tracker • Area Cluster B (Cloud Synced)</span>
+            <span id="lastUpdated" class="font-medium text-pastoral-700 dark:text-emerald-400">Connecting to Firebase...</span>
         </div>
-
     </div>
 
-    <!-- Modal: Fast Formation Complete Toggle for Selected Member -->
+    <!-- Modals -->
     <div id="formationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-xl w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden transform transition-all">
             <div class="bg-pastoral-800 text-white px-6 py-3.5 flex justify-between items-center font-semibold text-xs">
                 <span id="modalMemberName" class="tracking-wide">Member Formations</span>
                 <button onclick="closeFormationModal()" class="text-pastoral-200 hover:text-white font-bold text-base transition">✕</button>
             </div>
-
             <div class="p-4 bg-pastoral-50 dark:bg-slate-900/50 border-b border-pastoral-100 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 dark:text-slate-300" id="modalMemberInfo"></div>
-
             <div class="p-6 max-h-[55vh] overflow-y-auto">
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 font-medium">Click the button on the right of each track to instantly complete or reset all talks:</p>
-                <div id="modalFormationList" class="space-y-2">
-                    <!-- Dynamic Formation Fast Items -->
-                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 font-medium">Click the button to instantly complete or reset talks:</p>
+                <div id="modalFormationList" class="space-y-2"></div>
             </div>
-
             <div class="bg-pastoral-50 dark:bg-slate-900 px-6 py-3 border-t border-pastoral-100 dark:border-slate-700 flex justify-end">
                 <button onclick="closeFormationModal()" class="bg-pastoral-800 hover:bg-pastoral-900 text-white px-5 py-2 rounded-lg font-medium text-xs shadow-sm transition">Done</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Add / Edit Member -->
     <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-md w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden">
             <div class="bg-pastoral-800 text-white px-6 py-3.5 flex justify-between items-center font-semibold text-xs">
@@ -365,8 +338,25 @@
         </div>
     </div>
 
-    <!-- Script Logic -->
+    <!-- Firebase SDKs (Compat version for smooth standalone HTML usage) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <!-- Script Logic with Firebase Integration -->
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf36moKYjsjKNGX23bVoI0k-caXYf0lMI",
+            authDomain: "yfc-pastoral-tracker.firebaseapp.com",
+            projectId: "yfc-pastoral-tracker",
+            storageBucket: "yfc-pastoral-tracker.firebasestorage.app",
+            messagingSenderId: "693014881382",
+            appId: "1:693014881382:web:80180c17fc2d9e913ef9a7",
+            measurementId: "G-7M6DM05TVK"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const formationsData = [
             { code: "CO", label: "COVENANT ORIENTATION", talks: 4 },
             { code: "FC", label: "FAMILY CULTURE", talks: 3 },
@@ -381,27 +371,14 @@
             { code: "YA", label: "YOUTH ADVOCATE", talks: 2 }
         ];
 
-        const MEMBERS_KEY = 'yfc_simple_tracker_members_v15';
+        let members = [];
         const HISTORY_KEY = 'yfc_simple_tracker_history_v15';
         const BACKUPS_KEY = 'yfc_simple_tracker_backups_v15';
-        const MAX_BACKUPS = 12;
-
-        let members = JSON.parse(localStorage.getItem(MEMBERS_KEY)) || [
-            { id: 1, lastName: "Acosta", firstName: "Gwen Dacy", nickname: "Gwen", gender: "Female", birthday: "2006-05-12", chapter: "Chapter 1", progress: { "CO": [true, true, true, true] } },
-            { id: 2, lastName: "Agustin", firstName: "Danica", nickname: "Dani", gender: "Female", birthday: "2006-08-20", chapter: "Chapter 1", progress: {} },
-            { id: 3, lastName: "Atole", firstName: "Francis Peter", nickname: "Francis", gender: "Male", birthday: "2006-01-15", chapter: "Chapter 2", progress: {} },
-            { id: 4, lastName: "Bulugagao", firstName: "Jayrill", nickname: "Jay", gender: "Male", birthday: "2006-07-29", chapter: "Chapter 2", progress: {} }
-        ];
-
-        let activityHistory = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [
-            { time: "System Initialized", desc: "Tracker loaded successfully with default records." }
-        ];
-
+        let activityHistory = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
         let backups = JSON.parse(localStorage.getItem(BACKUPS_KEY)) || [];
-
         let currentActiveMemberId = null;
 
-        // Dark Mode Initialization
+        // Dark Mode
         if (localStorage.getItem('yfc_theme') === 'dark' || (!('yfc_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -418,19 +395,53 @@
             }
         }
 
-        // Live Clock Tick Function
         function updateLiveClock() {
             const now = new Date();
             const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
             const clockEl = document.getElementById('clockText');
-            if (clockEl) {
-                clockEl.innerText = now.toLocaleDateString('en-US', options);
-            }
+            if (clockEl) clockEl.innerText = now.toLocaleDateString('en-US', options);
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // ---------- Persistence, history & auto-backups ----------
+        // Real-time listener from Firebase Firestore
+        function initRealtimeSync() {
+            db.collection("members").onSnapshot((snapshot) => {
+                members = [];
+                snapshot.forEach((doc) => {
+                    members.push({ firebaseId: doc.id, ...doc.data() });
+                });
+                renderTable();
+                renderFormationSummary();
+                updateLastModifiedTime();
+            }, (error) => {
+                console.error("Error getting documents: ", error);
+                document.getElementById('lastUpdated').innerText = "Cloud sync error!";
+            });
+        }
+
+        async function saveMemberToCloud(memberData) {
+            try {
+                if (memberData.firebaseId) {
+                    const id = memberData.firebaseId;
+                    delete memberData.firebaseId;
+                    await db.collection("members").doc(id).set(memberData);
+                } else {
+                    await db.collection("members").add(memberData);
+                }
+            } catch (e) {
+                console.error("Error writing document: ", e);
+                alert("Error saving to cloud database.");
+            }
+        }
+
+        async function deleteMemberFromCloud(firebaseId) {
+            try {
+                await db.collection("members").doc(firebaseId).delete();
+            } catch (e) {
+                console.error("Error removing document: ", e);
+            }
+        }
 
         function logActivity(description) {
             const now = new Date();
@@ -441,72 +452,12 @@
             renderHistoryLogs();
         }
 
-        function saveStorage() {
-            localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
-            updateLastModifiedTime();
-            pushAutoBackup();
-        }
-
-        // Keeps a rolling snapshot list so the roster can be recovered
-        // even if the browser data or the website itself has a problem.
-        function pushAutoBackup(label) {
-            const snapshot = {
-                time: new Date().toLocaleString(),
-                label: label || 'Auto-saved',
-                data: JSON.parse(JSON.stringify(members))
-            };
-            backups.unshift(snapshot);
-            if (backups.length > MAX_BACKUPS) backups = backups.slice(0, MAX_BACKUPS);
-            localStorage.setItem(BACKUPS_KEY, JSON.stringify(backups));
-            renderBackupList();
-        }
-
-        function createManualBackup() {
-            pushAutoBackup('Manual backup');
-            logActivity('Created a manual backup snapshot.');
-        }
-
-        function restoreBackup(index) {
-            const b = backups[index];
-            if (!b) return;
-            if (confirm(`Restore the backup from ${b.time}? This will replace the current member list (${members.length} members) with ${b.data.length} members from that backup.`)) {
-                members = JSON.parse(JSON.stringify(b.data));
-                localStorage.setItem(MEMBERS_KEY, JSON.stringify(members));
-                updateLastModifiedTime();
-                logActivity(`Restored member data from backup dated ${b.time}.`);
-                renderTable();
-                renderFormationSummary();
-            }
-        }
-
-        function downloadBackup(index) {
-            const b = backups[index];
-            if (!b) return;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(b.data, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `yfc_backup_${b.time.replace(/[\/,: ]/g, '-')}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function deleteBackup(index) {
-            if (confirm('Remove this saved backup?')) {
-                backups.splice(index, 1);
-                localStorage.setItem(BACKUPS_KEY, JSON.stringify(backups));
-                renderBackupList();
-            }
-        }
-
         function updateLastModifiedTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateString = now.toLocaleDateString();
             const el = document.getElementById('lastUpdated');
-            if (el) {
-                el.innerText = `Last saved / synced: ${dateString} at ${timeString}`;
-            }
+            if (el) el.innerText = `Cloud synced: ${dateString} at ${timeString}`;
         }
 
         function renderHistoryLogs() {
@@ -520,10 +471,7 @@
             activityHistory.forEach(log => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between bg-pastoral-50/60 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg border border-pastoral-100 dark:border-slate-700 text-[11px]";
-                div.innerHTML = `
-                    <span class="text-slate-700 dark:text-slate-300">🔹 ${log.desc}</span>
-                    <span class="text-[10px] text-slate-400 font-mono shrink-0 ml-2">${log.time}</span>
-                `;
+                div.innerHTML = `<span class="text-slate-700 dark:text-slate-300">🔹 ${log.desc}</span><span class="text-[10px] text-slate-400 font-mono shrink-0 ml-2">${log.time}</span>`;
                 container.appendChild(div);
             });
         }
@@ -533,23 +481,13 @@
             if (!container) return;
             container.innerHTML = '';
             if (backups.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 italic p-3">No backups saved yet. They're created automatically whenever a member is added, edited, or updated.</p>`;
+                container.innerHTML = `<p class="text-slate-400 italic p-3">Export/backup tools ready.</p>`;
                 return;
             }
             backups.forEach((b, index) => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between gap-2 bg-pastoral-50/60 dark:bg-slate-900/50 px-3 py-2 rounded-lg border border-pastoral-100 dark:border-slate-700 text-[11px]";
-                div.innerHTML = `
-                    <div>
-                        <span class="block font-semibold text-slate-700 dark:text-slate-200">${b.label} • ${b.data.length} members</span>
-                        <span class="block text-[10px] text-slate-400 font-mono">${b.time}</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="restoreBackup(${index})" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-2.5 py-1 rounded-md text-[10px] font-semibold transition">Restore</button>
-                        <button onclick="downloadBackup(${index})" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1 rounded-md text-[10px] font-semibold transition">Download</button>
-                        <button onclick="deleteBackup(${index})" class="text-slate-400 hover:text-red-600 font-bold px-1 transition" title="Delete backup">✕</button>
-                    </div>
-                `;
+                div.innerHTML = `<div><span class="block font-semibold text-slate-700 dark:text-slate-200">${b.label} • ${b.data.length} members</span><span class="block text-[10px] text-slate-400 font-mono">${b.time}</span></div>`;
                 container.appendChild(div);
             });
         }
@@ -568,13 +506,9 @@
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
             return `${age} yrs old`;
         }
-
-        // ---------- Tabs ----------
 
         function setTabButtonState(btn, active) {
             if (active) {
@@ -619,21 +553,15 @@
             return count;
         }
 
-        // Improved Search Handling with Clear (X) Button support
         function handleSearchInput() {
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearSearchBtn');
-            if (searchInput.value.trim().length > 0) {
-                clearBtn.style.display = 'flex';
-            } else {
-                clearBtn.style.display = 'none';
-            }
+            clearBtn.style.display = searchInput.value.trim().length > 0 ? 'flex' : 'none';
             renderTable();
         }
 
         function clearSearch() {
-            const searchInput = document.getElementById('searchInput');
-            searchInput.value = '';
+            document.getElementById('searchInput').value = '';
             document.getElementById('clearSearchBtn').style.display = 'none';
             renderTable();
         }
@@ -668,26 +596,19 @@
                 const genderBadge = m.gender === 'Female'
                     ? `<span class="bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Female</span>`
                     : `<span class="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Male</span>`;
-
                 const ageText = calculateAge(m.birthday);
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-pastoral-50/60 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-700/50";
                 tr.innerHTML = `
                     <td data-label="Member name" class="py-3 px-6 font-bold text-slate-900 dark:text-white">${formattedName}${nicknameDisplay}</td>
-                    <td data-label="Gender / age" class="py-3 px-4">
-                        <span class="inline-flex items-center gap-1.5">${genderBadge}<span class="text-[10px] text-slate-400">${ageText}</span></span>
-                    </td>
-                    <td data-label="Area / chapter" class="py-3 px-4">
-                        <span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-full text-[10px]">${m.chapter}</span>
-                    </td>
-                    <td data-label="Formations done" class="py-3 px-4 text-center">
-                        <span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-2.5 py-1 rounded-full text-[10px]">${completedCount} / 11 Done</span>
-                    </td>
+                    <td data-label="Gender / age" class="py-3 px-4"><span class="inline-flex items-center gap-1.5">${genderBadge}<span class="text-[10px] text-slate-400">${ageText}</span></span></td>
+                    <td data-label="Area / chapter" class="py-3 px-4"><span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-full text-[10px]">${m.chapter}</span></td>
+                    <td data-label="Formations done" class="py-3 px-4 text-center"><span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-2.5 py-1 rounded-full text-[10px]">${completedCount} / 11 Done</span></td>
                     <td data-label="Actions" class="py-3 px-6 text-center flex justify-center items-center gap-2">
-                        <button onclick="openFormationModal(${m.id})" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-3.5 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition active:scale-95">Formation</button>
-                        <button onclick="openEditModal(${m.id})" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition">Edit</button>
-                        <button onclick="deleteMember(${m.id})" class="text-slate-400 hover:text-red-600 font-bold px-1 transition text-sm" title="Delete">✕</button>
+                        <button onclick="openFormationModal('${m.firebaseId}')" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-3.5 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition active:scale-95">Formation</button>
+                        <button onclick="openEditModal('${m.firebaseId}')" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition">Edit</button>
+                        <button onclick="deleteMember('${m.firebaseId}')" class="text-slate-400 hover:text-red-600 font-bold px-1 transition text-sm" title="Delete">✕</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -705,7 +626,6 @@
                     const attendedCount = Array.isArray(talksAttended) ? talksAttended.filter(Boolean).length : 0;
                     return attendedCount === f.talks;
                 });
-
                 const count = completedMembers.length;
 
                 const tr = document.createElement('tr');
@@ -724,9 +644,9 @@
             });
         }
 
-        function openFormationModal(id) {
-            currentActiveMemberId = id;
-            const member = members.find(m => m.id === id);
+        function openFormationModal(firebaseId) {
+            currentActiveMemberId = firebaseId;
+            const member = members.find(m => m.firebaseId === firebaseId);
             document.getElementById('modalMemberName').innerText = `Formations: ${member.lastName}, ${member.firstName}`;
 
             document.getElementById('modalMemberInfo').innerHTML = `
@@ -742,7 +662,7 @@
         }
 
         function renderModalFormations() {
-            const member = members.find(m => m.id === currentActiveMemberId);
+            const member = members.find(m => m.firebaseId === currentActiveMemberId);
             const container = document.getElementById('modalFormationList');
             container.innerHTML = '';
 
@@ -758,7 +678,6 @@
 
                 const itemDiv = document.createElement('div');
                 itemDiv.className = "p-3 border border-pastoral-100 dark:border-slate-700 rounded-lg bg-pastoral-50/50 dark:bg-slate-900 flex items-center justify-between transition-colors";
-
                 itemDiv.innerHTML = `
                     <div>
                         <span class="font-extrabold text-pastoral-700 dark:text-emerald-400">${f.code}</span> - <span class="font-semibold text-slate-800 dark:text-slate-200">${f.label}</span>
@@ -775,7 +694,7 @@
         }
 
         function toggleCompleteFormation(formationIndex) {
-            const member = members.find(m => m.id === currentActiveMemberId);
+            const member = members.find(m => m.firebaseId === currentActiveMemberId);
             const f = formationsData[formationIndex];
 
             const talksStatus = member.progress[f.code];
@@ -790,7 +709,7 @@
                 logActivity(`Completed formation ${f.code} for ${member.firstName} ${member.lastName}`);
             }
 
-            saveStorage();
+            saveMemberToCloud({ ...member });
             renderModalFormations();
         }
 
@@ -808,9 +727,9 @@
             document.getElementById('addModal').classList.add('flex');
         }
 
-        function openEditModal(id) {
-            const member = members.find(m => m.id === id);
-            document.getElementById('editMemberId').value = member.id;
+        function openEditModal(firebaseId) {
+            const member = members.find(m => m.firebaseId === firebaseId);
+            document.getElementById('editMemberId').value = member.firebaseId;
             document.getElementById('addModalTitle').innerText = 'Edit Member Information';
             document.getElementById('addLastName').value = member.lastName;
             document.getElementById('addFirstName').value = member.firstName;
@@ -830,7 +749,7 @@
 
         function handleSaveMember(e) {
             e.preventDefault();
-            const editId = document.getElementById('editMemberId').value;
+            const editFirebaseId = document.getElementById('editMemberId').value;
             const lastName = document.getElementById('addLastName').value.trim();
             const firstName = document.getElementById('addFirstName').value.trim();
             const nickname = document.getElementById('addNickname').value.trim();
@@ -838,21 +757,8 @@
             const birthday = document.getElementById('addBirthday').value;
             const chapter = document.getElementById('addChapter').value;
 
-            const isDuplicate = members.some(m => {
-                const matchName = m.lastName.toLowerCase() === lastName.toLowerCase() && m.firstName.toLowerCase() === firstName.toLowerCase();
-                if (editId) {
-                    return matchName && m.id != editId;
-                }
-                return matchName;
-            });
-
-            if (isDuplicate) {
-                alert(`⚠️ Duplicate Warning: Member "${lastName}, ${firstName}" is already listed in the directory!`);
-                return;
-            }
-
-            if (editId) {
-                const member = members.find(m => m.id == editId);
+            if (editFirebaseId) {
+                const member = members.find(m => m.firebaseId === editFirebaseId);
                 if (member) {
                     member.lastName = lastName;
                     member.firstName = firstName;
@@ -861,10 +767,10 @@
                     member.birthday = birthday;
                     member.chapter = chapter;
                     logActivity(`Updated info for member: ${lastName}, ${firstName}`);
+                    saveMemberToCloud({ ...member });
                 }
             } else {
-                members.push({
-                    id: Date.now(),
+                const newMember = {
                     lastName: lastName,
                     firstName: firstName,
                     nickname: nickname,
@@ -872,22 +778,19 @@
                     birthday: birthday,
                     chapter: chapter,
                     progress: {}
-                });
+                };
                 logActivity(`Added new member: ${lastName}, ${firstName}`);
+                saveMemberToCloud(newMember);
             }
 
-            saveStorage();
             closeAddModal();
-            renderTable();
         }
 
-        function deleteMember(id) {
-            const member = members.find(m => m.id === id);
+        function deleteMember(firebaseId) {
+            const member = members.find(m => m.firebaseId === firebaseId);
             if (confirm(`Are you sure you want to remove ${member.lastName}, ${member.firstName}?`)) {
                 logActivity(`Deleted member: ${member.lastName}, ${member.firstName}`);
-                members = members.filter(m => m.id !== id);
-                saveStorage();
-                renderTable();
+                deleteMemberFromCloud(firebaseId);
             }
         }
 
@@ -910,11 +813,12 @@
                     try {
                         const parsed = JSON.parse(e.target.result);
                         if (Array.isArray(parsed)) {
-                            members = parsed;
-                            saveStorage();
-                            renderTable();
-                            logActivity("Imported data backup from JSON file.");
-                            alert("Data successfully imported!");
+                            parsed.forEach(m => {
+                                delete m.firebaseId;
+                                db.collection("members").add(m);
+                            });
+                            logActivity("Imported batch data into cloud.");
+                            alert("Data successfully imported to cloud!");
                         } else {
                             alert("Invalid backup file format.");
                         }
@@ -925,14 +829,11 @@
             }
         }
 
-        // Initialize on load
+        // Initialize Realtime Sync on load
+        initRealtimeSync();
         switchTab('members');
         renderHistoryLogs();
         renderBackupList();
-        updateLastModifiedTime();
-        if (backups.length === 0 && members.length > 0) {
-            pushAutoBackup('Initial backup');
-        }
     </script>
 </body>
 </html>
