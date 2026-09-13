@@ -21,14 +21,14 @@
                     },
                     colors: {
                         pastoral: {
-                            50: '#F3F7F1',
-                            100: '#E3ECDF',
-                            200: '#C4D9BC',
-                            600: '#2E6B45',
-                            700: '#23573A',
-                            800: '#1A4530',
-                            900: '#123120',
-                            950: '#0C2417'
+                            50: 'rgb(var(--p50) / <alpha-value>)',
+                            100: 'rgb(var(--p100) / <alpha-value>)',
+                            200: 'rgb(var(--p200) / <alpha-value>)',
+                            600: 'rgb(var(--p600) / <alpha-value>)',
+                            700: 'rgb(var(--p700) / <alpha-value>)',
+                            800: 'rgb(var(--p800) / <alpha-value>)',
+                            900: 'rgb(var(--p900) / <alpha-value>)',
+                            950: 'rgb(var(--p950) / <alpha-value>)'
                         },
                         gold: {
                             300: '#E8D19B',
@@ -47,6 +47,17 @@
     </script>
 
     <style>
+        :root {
+            /* Default accent theme = Forest Green. Overridden live by the color-theme picker (light mode only — dark mode keeps the slate palette untouched). */
+            --p50: 243 247 241;
+            --p100: 227 236 223;
+            --p200: 196 217 188;
+            --p600: 46 107 69;
+            --p700: 35 87 58;
+            --p800: 26 69 48;
+            --p900: 18 49 32;
+            --p950: 12 36 23;
+        }
         body { font-family: 'Inter', ui-sans-serif, system-ui; }
         .font-serif-display { font-family: 'Fraunces', ui-serif, Georgia; }
         .header-texture {
@@ -56,6 +67,27 @@
         }
         .tab-pill {
             transition: color .18s ease, background-color .18s ease, box-shadow .18s ease;
+        }
+        body, .header-texture, #calendarGrid, .swatch-btn, table.responsive-table tr {
+            transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+        }
+        .swatch-btn {
+            width: 26px; height: 26px; border-radius: 9999px; flex-shrink: 0;
+            border: 2px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+            cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .swatch-btn:hover { transform: scale(1.12); }
+        .swatch-btn.active { box-shadow: 0 0 0 2px rgb(var(--p700)); transform: scale(1.1); }
+        .day-cell { cursor: pointer; }
+        .day-cell:hover { background-color: rgb(var(--p50)); }
+        html.dark .day-cell:hover { background-color: rgb(51 65 85 / .4); }
+        .day-cell.is-today .day-number-badge {
+            background-color: rgb(var(--p700)); color: white;
+        }
+        @media (max-width: 640px) {
+            #calendarGrid.compact-mobile > .day-cell { min-height: 58px !important; padding: 4px !important; }
+            #calendarGrid.compact-mobile .event-pill-list { display: none; }
+            #calendarGrid.compact-mobile .event-dots { display: flex !important; }
         }
         @media (max-width: 720px) {
             table.responsive-table thead { display: none; }
@@ -105,7 +137,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(148,163,184,.4); border-radius: 8px; }
     </style>
 </head>
-<body class="bg-cream-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs min-h-screen p-3 sm:p-6 flex flex-col justify-between transition-colors duration-200">
+<body class="bg-pastoral-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-xs min-h-screen p-3 sm:p-6 flex flex-col justify-between transition-colors duration-200">
 
     <!-- SECURITY PIN OVERLAY MODAL -->
     <div id="pinModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -135,7 +167,17 @@
                     <span>🕒</span> <span id="clockText">--:--:--</span>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 relative">
+                    <div class="relative">
+                        <button onclick="toggleThemePicker()" id="themePickerBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-semibold text-xs transition flex items-center gap-1 shadow-sm" title="Change site color">
+                            🎨 Color
+                        </button>
+                        <div id="themePickerDropdown" class="hidden absolute right-0 mt-2 w-60 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl shadow-2xl border border-pastoral-100 dark:border-slate-700 p-3 z-50">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 px-0.5">Pick a background color</p>
+                            <div id="themeSwatchGrid" class="grid grid-cols-5 gap-2.5 place-items-center"></div>
+                            <p class="text-[10px] text-slate-400 mt-2.5 px-0.5">Applies to the background &amp; accents in light mode. Dark mode stays as is.</p>
+                        </div>
+                    </div>
                     <button onclick="toggleDarkMode()" id="darkModeBtn" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-semibold text-xs transition flex items-center gap-1 shadow-sm">
                         🌙 Dark mode
                     </button>
@@ -307,22 +349,27 @@
                         <h2 id="calendarMonthTitle" class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100"></h2>
                         <p class="text-[11px] text-slate-400">Cluster schedule and activities calendar.</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="changeMonth(-1)" class="bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold">&larr; Prev</button>
-                        <button onclick="changeMonth(1)" class="bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold">Next &rarr;</button>
-                        <button onclick="openAddEventModal()" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-3 py-1.5 rounded-lg font-bold text-xs transition ml-2">+ Add Event</button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="changeMonth(-1)" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition min-h-[38px]" title="Previous month">&larr;</button>
+                        <button onclick="goToToday()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition min-h-[38px]">Today</button>
+                        <button onclick="changeMonth(1)" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition min-h-[38px]" title="Next month">&rarr;</button>
+                        <button onclick="openAddEventModal()" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-3.5 py-2 rounded-lg font-bold text-xs transition min-h-[38px]">+ Add Event</button>
                     </div>
                 </div>
 
+                <!-- Category legend -->
+                <div id="calendarLegend" class="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 text-[10px] text-slate-500 dark:text-slate-400"></div>
+
                 <!-- Calendar Grid Layout -->
                 <div class="border border-pastoral-100 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
-                    <div class="grid grid-cols-7 bg-pastoral-800 text-white text-center font-semibold text-[10px] py-2">
+                    <div class="grid grid-cols-7 bg-pastoral-800 text-white text-center font-semibold text-[9px] sm:text-[10px] py-2">
                         <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
                     </div>
-                    <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-700 text-xs min-h-[360px]">
+                    <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-700 text-xs">
                         <!-- Dynamic days -->
                     </div>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-2 sm:hidden">Tap a day to view or add events.</p>
             </div>
 
             <!-- TAB 5: HISTORY & BACKUPS -->
@@ -379,7 +426,7 @@
     </div>
 
     <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-md w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-md w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="bg-pastoral-800 text-white px-6 py-3.5 flex justify-between items-center font-semibold text-xs">
                 <span id="addModalTitle" class="tracking-wide">Add New Member</span>
                 <button onclick="closeAddModal()" class="text-pastoral-200 hover:text-white font-bold text-base transition">✕</button>
@@ -432,7 +479,7 @@
 
     <!-- Add Finance Modal -->
     <div id="addTransactionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden p-5">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden p-5 max-h-[92vh] overflow-y-auto">
             <h3 class="font-serif-display text-sm font-semibold mb-3">Add Financial Entry</h3>
             <form onsubmit="saveTransaction(event)" class="space-y-3 text-xs">
                 <div>
@@ -466,22 +513,61 @@
 
     <!-- Add Event Modal -->
     <div id="addEventModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden p-5">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden p-5 max-h-[92vh] overflow-y-auto">
             <h3 class="font-serif-display text-sm font-semibold mb-3">Add Calendar Event</h3>
             <form onsubmit="saveCalendarEvent(event)" class="space-y-3 text-xs">
                 <div>
                     <label class="block font-semibold mb-1">Event Title</label>
                     <input type="text" id="eventTitle" required placeholder="Cluster Assembly" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-900">
                 </div>
-                <div>
-                    <label class="block font-semibold mb-1">Date</label>
-                    <input type="date" id="eventDate" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-900">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold mb-1">Date</label>
+                        <input type="date" id="eventDate" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Category</label>
+                        <select id="eventCategory" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-2 bg-slate-50 dark:bg-slate-900">
+                            <option value="general">General</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="formation">Formation</option>
+                            <option value="birthday">Birthday</option>
+                            <option value="deadline">Deadline</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeAddEventModal()" class="bg-slate-200 dark:bg-slate-700 px-3 py-1.5 rounded-lg">Cancel</button>
-                    <button type="submit" class="bg-pastoral-800 text-white px-4 py-1.5 rounded-lg">Add Event</button>
+                    <button type="button" onclick="closeAddEventModal()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-4 py-2 rounded-lg font-semibold transition">Cancel</button>
+                    <button type="submit" class="bg-pastoral-800 hover:bg-pastoral-900 text-white px-4 py-2 rounded-lg font-semibold transition">Add Event</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Day Detail Modal (view / manage a single day's events) -->
+    <div id="dayDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden max-h-[85vh] flex flex-col">
+            <div class="bg-pastoral-800 text-white px-5 py-3.5 flex justify-between items-center font-semibold text-xs shrink-0">
+                <span id="dayDetailTitle" class="tracking-wide">Events</span>
+                <button onclick="closeDayDetailModal()" class="text-pastoral-200 hover:text-white font-bold text-base transition">✕</button>
+            </div>
+            <div id="dayDetailList" class="p-4 space-y-2 overflow-y-auto"></div>
+            <div class="p-4 border-t border-pastoral-100 dark:border-slate-700 shrink-0">
+                <button onclick="openAddEventModalForDay()" class="w-full bg-pastoral-700 hover:bg-pastoral-800 text-white py-2.5 rounded-lg font-bold text-xs transition">+ Add event for this day</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Deletion Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-[60] p-4">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-sm w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden p-6 text-center">
+            <div class="mx-auto bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-3">⚠️</div>
+            <h3 class="font-serif-display text-sm font-semibold mb-1">Confirm Deletion</h3>
+            <p id="confirmModalMessage" class="text-[11px] text-slate-500 dark:text-slate-400 mb-5">Are you sure you want to delete this?</p>
+            <div class="flex gap-2">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 rounded-lg font-semibold transition min-h-[42px]">Cancel</button>
+                <button id="confirmModalActionBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-lg font-semibold transition min-h-[42px]">Yes, delete</button>
+            </div>
         </div>
     </div>
 
@@ -575,6 +661,83 @@
                 localStorage.setItem('yfc_theme', 'dark');
             }
         }
+
+        // --- Color Theme Picker (background/accent color — independent of dark mode) ---
+        const COLOR_THEME_KEY = 'yfc_color_theme';
+        const colorThemes = {
+            green:  { name: 'Forest Green', swatch: '#1A4530', vals: { p50:'243 247 241', p100:'227 236 223', p200:'196 217 188', p600:'46 107 69',  p700:'35 87 58',  p800:'26 69 48',  p900:'18 49 32',  p950:'12 36 23' } },
+            pink:   { name: 'Pink',         swatch: '#db2777', vals: { p50:'253 242 248', p100:'252 231 243', p200:'251 207 232', p600:'219 39 119', p700:'190 24 93', p800:'157 23 77', p900:'131 24 67', p950:'80 7 36' } },
+            rose:   { name: 'Rose',         swatch: '#e11d48', vals: { p50:'255 241 242', p100:'255 228 230', p200:'254 205 211', p600:'225 29 72',  p700:'190 18 60', p800:'159 18 57', p900:'136 19 55', p950:'76 5 25' } },
+            blue:   { name: 'Ocean Blue',   swatch: '#2563eb', vals: { p50:'239 246 255', p100:'219 234 254', p200:'191 219 254', p600:'37 99 235',  p700:'29 78 216', p800:'30 64 175', p900:'30 58 138', p950:'23 37 84' } },
+            purple: { name: 'Purple',       swatch: '#9333ea', vals: { p50:'250 245 255', p100:'243 232 255', p200:'233 213 255', p600:'147 51 234', p700:'126 34 206', p800:'107 33 168', p900:'88 28 135', p950:'59 7 100' } },
+            teal:   { name: 'Teal',         swatch: '#0d9488', vals: { p50:'240 253 250', p100:'204 251 241', p200:'153 246 228', p600:'13 148 136', p700:'15 118 110', p800:'17 94 89',  p900:'19 78 74',  p950:'4 47 46' } },
+            orange: { name: 'Sunset Orange',swatch: '#ea580c', vals: { p50:'255 247 237', p100:'255 237 213', p200:'254 215 170', p600:'234 88 12', p700:'194 65 12', p800:'154 52 18', p900:'124 45 18', p950:'67 20 7' } },
+            indigo: { name: 'Indigo',       swatch: '#4f46e5', vals: { p50:'238 242 255', p100:'224 231 255', p200:'199 210 254', p600:'79 70 229', p700:'67 56 202', p800:'55 48 163', p900:'49 46 129', p950:'30 27 75' } },
+            red:    { name: 'Red',          swatch: '#dc2626', vals: { p50:'254 242 242', p100:'254 226 226', p200:'254 202 202', p600:'220 38 38', p700:'185 28 28', p800:'153 27 27', p900:'127 29 29', p950:'69 10 10' } }
+        };
+
+        function applyColorTheme(key, save) {
+            const theme = colorThemes[key] || colorThemes.green;
+            const root = document.documentElement.style;
+            Object.entries(theme.vals).forEach(([varName, val]) => root.setProperty(`--${varName}`, val));
+            if (save) localStorage.setItem(COLOR_THEME_KEY, key);
+            document.querySelectorAll('.swatch-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.themeKey === key);
+            });
+        }
+
+        function buildThemeSwatchGrid() {
+            const grid = document.getElementById('themeSwatchGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            const savedKey = localStorage.getItem(COLOR_THEME_KEY) || 'green';
+            Object.entries(colorThemes).forEach(([key, theme]) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'swatch-btn' + (key === savedKey ? ' active' : '');
+                btn.style.backgroundColor = theme.swatch;
+                btn.title = theme.name;
+                btn.dataset.themeKey = key;
+                btn.onclick = () => applyColorTheme(key, true);
+                grid.appendChild(btn);
+            });
+        }
+
+        function toggleThemePicker() {
+            const dropdown = document.getElementById('themePickerDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('themePickerDropdown');
+            const btn = document.getElementById('themePickerBtn');
+            if (!dropdown || dropdown.classList.contains('hidden')) return;
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Apply saved (or default) color theme immediately on load
+        applyColorTheme(localStorage.getItem(COLOR_THEME_KEY) || 'green', false);
+        buildThemeSwatchGrid();
+
+        // --- Confirm Deletion Modal ---
+        let _confirmDeleteCallback = null;
+        function showConfirmModal(message, callback) {
+            document.getElementById('confirmModalMessage').innerText = message;
+            _confirmDeleteCallback = callback;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.getElementById('confirmModal').classList.add('flex');
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            document.getElementById('confirmModal').classList.remove('flex');
+            _confirmDeleteCallback = null;
+        }
+        document.getElementById('confirmModalActionBtn').addEventListener('click', function () {
+            if (_confirmDeleteCallback) _confirmDeleteCallback();
+            closeConfirmModal();
+        });
 
         function updateLiveClock() {
             const now = new Date();
@@ -781,14 +944,17 @@
             }
         }
 
-        async function deleteTransaction(firebaseId) {
-            if (confirm("Are you sure you want to delete this transaction?")) {
+        function deleteTransaction(firebaseId) {
+            const t = financeTransactions.find(x => x.firebaseId === firebaseId);
+            const label = t ? `"${t.desc}" (₱${t.amount.toFixed(2)})` : 'this transaction';
+            showConfirmModal(`Are you sure you want to delete ${label}? This cannot be undone.`, async () => {
                 try {
                     await db.collection("finance").doc(firebaseId).delete();
+                    logActivity(`Deleted finance transaction: ${t ? t.desc : firebaseId}`);
                 } catch (err) {
                     console.error("Error deleting transaction: ", err);
                 }
-            }
+            });
         }
 
         function renderFinanceTracker() {
@@ -824,15 +990,42 @@
         }
 
         // --- Calendar Functions (Cloud Synced) ---
+        const eventCategories = {
+            general:   { label: 'General',   dot: 'bg-slate-400',   pill: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200' },
+            meeting:   { label: 'Meeting',    dot: 'bg-blue-500',    pill: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+            formation: { label: 'Formation',  dot: 'bg-emerald-500', pill: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' },
+            birthday:  { label: 'Birthday',   dot: 'bg-pink-500',    pill: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' },
+            deadline:  { label: 'Deadline',   dot: 'bg-red-500',     pill: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' }
+        };
+        let _dayDetailDateStr = null;
+
+        function todayDateStr() {
+            const n = new Date();
+            return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+        }
+
         function changeMonth(direction) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
             renderCalendar();
         }
 
-        function openAddEventModal() {
+        function goToToday() {
+            currentCalendarDate = new Date();
+            renderCalendar();
+        }
+
+        function openAddEventModal(prefillDate) {
             document.getElementById('addEventModal').classList.remove('hidden');
             document.getElementById('addEventModal').classList.add('flex');
-            document.getElementById('eventDate').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('eventDate').value = prefillDate || new Date().toISOString().slice(0, 10);
+            document.getElementById('eventCategory').value = 'general';
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventTitle').focus();
+        }
+
+        function openAddEventModalForDay() {
+            closeDayDetailModal();
+            openAddEventModal(_dayDetailDateStr);
         }
 
         function closeAddEventModal() {
@@ -844,8 +1037,9 @@
             e.preventDefault();
             const title = document.getElementById('eventTitle').value;
             const date = document.getElementById('eventDate').value;
+            const category = document.getElementById('eventCategory').value;
 
-            const newEvent = { title, date };
+            const newEvent = { title, date, category };
 
             try {
                 await db.collection("calendar").add(newEvent);
@@ -857,22 +1051,41 @@
             }
         }
 
-        async function deleteCalendarEvent(firebaseId) {
-            try {
-                await db.collection("calendar").doc(firebaseId).delete();
-            } catch (err) {
-                console.error("Error deleting event: ", err);
-            }
+        function deleteCalendarEvent(firebaseId) {
+            const ev = calendarEvents.find(x => x.firebaseId === firebaseId);
+            const label = ev ? `"${ev.title}"` : 'this event';
+            showConfirmModal(`Are you sure you want to delete ${label}? This cannot be undone.`, async () => {
+                try {
+                    await db.collection("calendar").doc(firebaseId).delete();
+                    logActivity(`Deleted calendar event: ${ev ? ev.title : firebaseId}`);
+                    if (document.getElementById('dayDetailModal').classList.contains('flex') && _dayDetailDateStr) {
+                        renderDayDetailList(_dayDetailDateStr);
+                    }
+                } catch (err) {
+                    console.error("Error deleting event: ", err);
+                }
+            });
+        }
+
+        function renderCalendarLegend() {
+            const legend = document.getElementById('calendarLegend');
+            if (!legend) return;
+            legend.innerHTML = Object.values(eventCategories).map(c =>
+                `<span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full ${c.dot} inline-block"></span>${c.label}</span>`
+            ).join('');
         }
 
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const titleEl = document.getElementById('calendarMonthTitle');
             if (!grid || !titleEl) return;
+            grid.className = "grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-700 text-xs compact-mobile";
             grid.innerHTML = '';
+            renderCalendarLegend();
 
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
+            const todayStr = todayDateStr();
 
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             titleEl.innerText = `${monthNames[month]} ${year}`;
@@ -888,23 +1101,70 @@
 
             for (let day = 1; day <= totalDays; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const cell = document.createElement('div');
-                cell.className = "p-2 bg-white dark:bg-slate-800 min-h-[90px] flex flex-col justify-between overflow-hidden";
-                
-                const dayHeader = `<div class="font-bold text-slate-500">${day}</div>`;
-                
-                let eventsHtml = '<div class="space-y-1 mt-1 overflow-y-auto max-h-[60px]">';
-                calendarEvents.filter(ev => ev.date === dateStr).forEach(ev => {
-                    eventsHtml += `<div class="bg-pastoral-100 dark:bg-pastoral-900/60 text-pastoral-900 dark:text-emerald-300 px-1.5 py-0.5 rounded text-[10px] flex justify-between items-center">
-                        <span class="truncate">${ev.title}</span>
-                        <button onclick="deleteCalendarEvent('${ev.firebaseId}')" class="text-red-500 font-bold ml-1">×</button>
-                    </div>`;
-                });
-                eventsHtml += '</div>';
+                const isToday = dateStr === todayStr;
+                const dayEvents = calendarEvents.filter(ev => ev.date === dateStr);
 
-                cell.innerHTML = dayHeader + eventsHtml;
+                const cell = document.createElement('div');
+                cell.className = "day-cell p-2 bg-white dark:bg-slate-800 min-h-[90px] flex flex-col overflow-hidden" + (isToday ? " is-today" : "");
+                cell.onclick = () => openDayDetailModal(dateStr);
+
+                const dayNumberClass = "day-number-badge inline-flex items-center justify-center w-5 h-5 rounded-full font-bold text-slate-500 dark:text-slate-400" + (isToday ? "" : "");
+                const dayHeader = `<div class="${dayNumberClass}">${day}</div>`;
+
+                let pillsHtml = '<div class="event-pill-list space-y-1 mt-1 overflow-hidden">';
+                dayEvents.slice(0, 2).forEach(ev => {
+                    const cat = eventCategories[ev.category] || eventCategories.general;
+                    pillsHtml += `<div class="${cat.pill} px-1.5 py-0.5 rounded text-[10px] truncate font-medium">${ev.title}</div>`;
+                });
+                if (dayEvents.length > 2) {
+                    pillsHtml += `<div class="text-[9px] text-slate-400 font-semibold px-1">+${dayEvents.length - 2} more</div>`;
+                }
+                pillsHtml += '</div>';
+
+                let dotsHtml = '<div class="event-dots hidden gap-1 mt-1 flex-wrap">';
+                dayEvents.slice(0, 4).forEach(ev => {
+                    const cat = eventCategories[ev.category] || eventCategories.general;
+                    dotsHtml += `<span class="w-1.5 h-1.5 rounded-full ${cat.dot} inline-block"></span>`;
+                });
+                dotsHtml += '</div>';
+
+                cell.innerHTML = dayHeader + pillsHtml + dotsHtml;
                 grid.appendChild(cell);
             }
+        }
+
+        function openDayDetailModal(dateStr) {
+            _dayDetailDateStr = dateStr;
+            const d = new Date(dateStr + 'T00:00:00');
+            const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('dayDetailTitle').innerText = label;
+            renderDayDetailList(dateStr);
+            document.getElementById('dayDetailModal').classList.remove('hidden');
+            document.getElementById('dayDetailModal').classList.add('flex');
+        }
+
+        function renderDayDetailList(dateStr) {
+            const container = document.getElementById('dayDetailList');
+            const dayEvents = calendarEvents.filter(ev => ev.date === dateStr);
+            if (dayEvents.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 italic text-center py-4">No events on this day yet.</p>`;
+                return;
+            }
+            container.innerHTML = dayEvents.map(ev => {
+                const cat = eventCategories[ev.category] || eventCategories.general;
+                return `<div class="flex items-center justify-between gap-2 p-3 rounded-lg border border-pastoral-100 dark:border-slate-700 bg-pastoral-50/50 dark:bg-slate-900/50">
+                    <div class="min-w-0">
+                        <span class="inline-flex items-center gap-1.5 ${cat.pill} px-2 py-0.5 rounded-full text-[10px] font-bold mb-1">${cat.label}</span>
+                        <p class="font-semibold text-slate-800 dark:text-slate-100 truncate">${ev.title}</p>
+                    </div>
+                    <button onclick="deleteCalendarEvent('${ev.firebaseId}')" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 shrink-0" title="Delete event">✕</button>
+                </div>`;
+            }).join('');
+        }
+
+        function closeDayDetailModal() {
+            document.getElementById('dayDetailModal').classList.add('hidden');
+            document.getElementById('dayDetailModal').classList.remove('flex');
         }
 
         function getCompletedFormationsCount(member) {
@@ -1158,10 +1418,11 @@
 
         function deleteMember(firebaseId) {
             const member = members.find(m => m.firebaseId === firebaseId);
-            if (confirm(`Are you sure you want to remove ${member.lastName}, ${member.firstName}?`)) {
+            if (!member) return;
+            showConfirmModal(`Are you sure you want to remove ${member.lastName}, ${member.firstName}? This cannot be undone.`, () => {
                 logActivity(`Deleted member: ${member.lastName}, ${member.firstName}`);
                 deleteMemberFromCloud(firebaseId);
-            }
+            });
         }
 
         function exportData() {
