@@ -491,7 +491,7 @@
 
     <script>
         // --- Security PIN & Auth Protection ---
-        const CORRECT_PIN = "2026"; // Default PIN, can be customized
+        const CORRECT_PIN = "2026"; // Default PIN
 
         function checkSession() {
             if (sessionStorage.getItem('yfc_authenticated') === 'true') {
@@ -519,7 +519,6 @@
             checkSession();
         }
 
-        // Run check on page load
         checkSession();
 
         const firebaseConfig = {
@@ -550,8 +549,8 @@
         ];
 
         let members = [];
-        let financeTransactions = JSON.parse(localStorage.getItem('yfc_finance_v1')) || [];
-        let calendarEvents = JSON.parse(localStorage.getItem('yfc_calendar_v1')) || [];
+        let financeTransactions = [];
+        let calendarEvents = [];
         const HISTORY_KEY = 'yfc_simple_tracker_history_v15';
         const BACKUPS_KEY = 'yfc_simple_tracker_backups_v15';
         let activityHistory = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
@@ -586,8 +585,9 @@
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // Real-time listener from Firebase Firestore
+        // --- Real-time Sync Listeners (Members, Finance, Calendar) ---
         function initRealtimeSync() {
+            // Members Sync
             db.collection("members").onSnapshot((snapshot) => {
                 members = [];
                 snapshot.forEach((doc) => {
@@ -597,8 +597,30 @@
                 renderFormationSummary();
                 updateLastModifiedTime();
             }, (error) => {
-                console.error("Error getting documents: ", error);
+                console.error("Error getting members: ", error);
                 document.getElementById('lastUpdated').innerText = "Cloud sync error!";
+            });
+
+            // Finance Sync
+            db.collection("finance").onSnapshot((snapshot) => {
+                financeTransactions = [];
+                snapshot.forEach((doc) => {
+                    financeTransactions.push({ firebaseId: doc.id, ...doc.data() });
+                });
+                renderFinanceTracker();
+            }, (error) => {
+                console.error("Error getting finance: ", error);
+            });
+
+            // Calendar Sync
+            db.collection("calendar").onSnapshot((snapshot) => {
+                calendarEvents = [];
+                snapshot.forEach((doc) => {
+                    calendarEvents.push({ firebaseId: doc.id, ...doc.data() });
+                });
+                renderCalendar();
+            }, (error) => {
+                console.error("Error getting calendar: ", error);
             });
         }
 
@@ -612,7 +634,7 @@
                     await db.collection("members").add(memberData);
                 }
             } catch (e) {
-                console.error("Error writing document: ", e);
+                console.error("Error writing member: ", e);
                 alert("Error saving to cloud database.");
             }
         }
@@ -621,7 +643,7 @@
             try {
                 await db.collection("members").doc(firebaseId).delete();
             } catch (e) {
-                console.error("Error removing document: ", e);
+                console.error("Error removing member: ", e);
             }
         }
 
@@ -666,7 +688,7 @@
                 container.innerHTML = `<p class="text-slate-400 italic p-3">Export/backup tools ready.</p>`;
                 return;
             }
-            backups.forEach((b, index) => {
+            backups.forEach((b) => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between gap-2 bg-pastoral-50/60 dark:bg-slate-900/50 px-3 py-2 rounded-lg border border-pastoral-100 dark:border-slate-700 text-[11px]";
                 div.innerHTML = `<div><span class="block font-semibold text-slate-700 dark:text-slate-200">${b.label} • ${b.data.length} members</span><span class="block text-[10px] text-slate-400 font-mono">${b.time}</span></div>`;
@@ -728,7 +750,7 @@
             if (tab === 'history') { renderHistoryLogs(); renderBackupList(); }
         }
 
-        // --- Finance Tracker Functions ---
+        // --- Finance Tracker Functions (Cloud Synced) ---
         function openAddTransactionModal() {
             document.getElementById('addTransactionModal').classList.remove('hidden');
             document.getElementById('addTransactionModal').classList.add('flex');
@@ -740,28 +762,38 @@
             document.getElementById('addTransactionModal').classList.remove('flex');
         }
 
-        function saveTransaction(e) {
+        async function saveTransaction(e) {
             e.preventDefault();
             const desc = document.getElementById('transDesc').value;
             const type = document.getElementById('transType').value;
             const amount = parseFloat(document.getElementById('transAmount').value);
             const date = document.getElementById('transDate').value;
 
-            financeTransactions.push({ id: Date.now(), desc, type, amount, date });
-            localStorage.setItem('yfc_finance_v1', JSON.stringify(financeTransactions));
-            logActivity(`Added finance transaction: ${desc} (₱${amount})`);
-            closeAddTransactionModal();
-            renderFinanceTracker();
+            const newTrans = { desc, type, amount, date };
+
+            try {
+                await db.collection("finance").add(newTrans);
+                logActivity(`Added finance transaction: ${desc} (₱${amount})`);
+                closeAddTransactionModal();
+            } catch (err) {
+                console.error("Error saving transaction: ", err);
+                alert("Error saving transaction to cloud.");
+            }
         }
 
-        function deleteTransaction(id) {
-            financeTransactions = financeTransactions.filter(t => t.id !== id);
-            localStorage.setItem('yfc_finance_v1', JSON.stringify(financeTransactions));
-            renderFinanceTracker();
+        async function deleteTransaction(firebaseId) {
+            if (confirm("Are you sure you want to delete this transaction?")) {
+                try {
+                    await db.collection("finance").doc(firebaseId).delete();
+                } catch (err) {
+                    console.error("Error deleting transaction: ", err);
+                }
+            }
         }
 
         function renderFinanceTracker() {
             const tbody = document.getElementById('financeTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             let totalIn = 0;
@@ -777,11 +809,11 @@
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 px-4">${t.date}</td>
-                    <td class="py-3 px-4 font-semibold">${t.desc}</td>
-                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'In' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${t.type === 'In' ? 'Funds In' : 'Expense'}</span></td>
-                    <td class="py-3 px-4 text-right font-mono font-bold ${t.type === 'In' ? 'text-emerald-600' : 'text-red-500'}">₱${t.amount.toFixed(2)}</td>
-                    <td class="py-3 px-4 text-center"><button onclick="deleteTransaction(${t.id})" class="text-red-500 font-bold hover:underline">✕</button></td>
+                    <td data-label="Date" class="py-3 px-4">${t.date}</td>
+                    <td data-label="Description" class="py-3 px-4 font-semibold">${t.desc}</td>
+                    <td data-label="Type" class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'In' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${t.type === 'In' ? 'Funds In' : 'Expense'}</span></td>
+                    <td data-label="Amount" class="py-3 px-4 text-right font-mono font-bold ${t.type === 'In' ? 'text-emerald-600' : 'text-red-500'}">₱${t.amount.toFixed(2)}</td>
+                    <td data-label="Action" class="py-3 px-4 text-center"><button onclick="deleteTransaction('${t.firebaseId}')" class="text-red-500 font-bold hover:underline">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -791,7 +823,7 @@
             document.getElementById('financeBalance').innerText = `₱${(totalIn - totalOut).toFixed(2)}`;
         }
 
-        // --- Calendar Functions ---
+        // --- Calendar Functions (Cloud Synced) ---
         function changeMonth(direction) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
             renderCalendar();
@@ -808,27 +840,35 @@
             document.getElementById('addEventModal').classList.remove('flex');
         }
 
-        function saveCalendarEvent(e) {
+        async function saveCalendarEvent(e) {
             e.preventDefault();
             const title = document.getElementById('eventTitle').value;
             const date = document.getElementById('eventDate').value;
 
-            calendarEvents.push({ id: Date.now(), title, date });
-            localStorage.setItem('yfc_calendar_v1', JSON.stringify(calendarEvents));
-            logActivity(`Added calendar event: ${title} on ${date}`);
-            closeAddEventModal();
-            renderCalendar();
+            const newEvent = { title, date };
+
+            try {
+                await db.collection("calendar").add(newEvent);
+                logActivity(`Added calendar event: ${title} on ${date}`);
+                closeAddEventModal();
+            } catch (err) {
+                console.error("Error saving event: ", err);
+                alert("Error saving event to cloud.");
+            }
         }
 
-        function deleteCalendarEvent(id) {
-            calendarEvents = calendarEvents.filter(e => e.id !== id);
-            localStorage.setItem('yfc_calendar_v1', JSON.stringify(calendarEvents));
-            renderCalendar();
+        async function deleteCalendarEvent(firebaseId) {
+            try {
+                await db.collection("calendar").doc(firebaseId).delete();
+            } catch (err) {
+                console.error("Error deleting event: ", err);
+            }
         }
 
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             const titleEl = document.getElementById('calendarMonthTitle');
+            if (!grid || !titleEl) return;
             grid.innerHTML = '';
 
             const year = currentCalendarDate.getFullYear();
@@ -840,7 +880,6 @@
             const firstDayIndex = new Date(year, month, 1).getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
 
-            // Blank spaces for previous month offset
             for (let i = 0; i < firstDayIndex; i++) {
                 const cell = document.createElement('div');
                 cell.className = "bg-slate-50 dark:bg-slate-900/30 min-h-[90px] opacity-40";
@@ -858,7 +897,7 @@
                 calendarEvents.filter(ev => ev.date === dateStr).forEach(ev => {
                     eventsHtml += `<div class="bg-pastoral-100 dark:bg-pastoral-900/60 text-pastoral-900 dark:text-emerald-300 px-1.5 py-0.5 rounded text-[10px] flex justify-between items-center">
                         <span class="truncate">${ev.title}</span>
-                        <button onclick="deleteCalendarEvent(${ev.id})" class="text-red-500 font-bold ml-1">×</button>
+                        <button onclick="deleteCalendarEvent('${ev.firebaseId}')" class="text-red-500 font-bold ml-1">×</button>
                     </div>`;
                 });
                 eventsHtml += '</div>';
@@ -896,6 +935,7 @@
 
         function renderTable() {
             const tbody = document.getElementById('memberTableBody');
+            if (!tbody) return;
             const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
             const chapterVal = document.getElementById('chapterFilter').value;
             tbody.innerHTML = '';
@@ -945,6 +985,7 @@
 
         function renderFormationSummary() {
             const tbody = document.getElementById('formationSummaryBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             formationsData.forEach(f => {
@@ -991,6 +1032,7 @@
 
         function renderModalFormations() {
             const member = members.find(m => m.firebaseId === currentActiveMemberId);
+            if (!member) return;
             const container = document.getElementById('modalFormationList');
             container.innerHTML = '';
 
@@ -1124,11 +1166,6 @@
 
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(members, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `yfc_cluster_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.getElementById('addModal').appendChild(downloadAnchor); // dummy parent
-            // standard download mechanism
             const tempLink = document.createElement('a');
             tempLink.href = dataStr;
             tempLink.download = `yfc_cluster_backup_${new Date().toISOString().slice(0,10)}.json`;
@@ -1160,7 +1197,7 @@
             }
         }
 
-        // Initialize Realtime Sync on load
+        // Initialize All Realtime Syncs on load
         initRealtimeSync();
         switchTab('members');
         renderHistoryLogs();
