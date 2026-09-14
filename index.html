@@ -247,7 +247,7 @@
                         <input type="text" id="searchInput" oninput="handleSearchInput()" placeholder="Search member by name or nickname..." class="w-full pl-10 pr-9 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pastoral-600 text-xs transition shadow-xs">
                         <button id="clearSearchBtn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 hidden items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-sm">✕</button>
                     </div>
-                    <select id="chapterFilter" onchange="renderTable()" class="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pastoral-600 text-xs transition shadow-xs">
+                    <select id="chapterFilter" onchange="handleChapterFilterChange()" class="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-pastoral-600 text-xs transition shadow-xs">
                         <option value="">All areas / chapters</option>
                         <option value="Chapter 1">Chapter 1</option>
                         <option value="Chapter 2">Chapter 2</option>
@@ -258,11 +258,12 @@
                     <table class="responsive-table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-pastoral-50 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 text-[10px] font-semibold border-b border-pastoral-100 dark:border-slate-700">
-                                <th class="py-3 px-6">Member name</th>
-                                <th class="py-3 px-4 w-28">Gender / age</th>
-                                <th class="py-3 px-4 w-36">Area / chapter</th>
-                                <th class="py-3 px-4 w-32 text-center">Formations done</th>
-                                <th class="py-3 px-6 w-44 text-center">Actions</th>
+                                <th class="py-3.5 px-4 w-10 text-center">#</th>
+                                <th class="py-3.5 px-4">Member name</th>
+                                <th class="py-3.5 px-4 w-28">Gender / age</th>
+                                <th class="py-3.5 px-4 w-36">Area / chapter</th>
+                                <th class="py-3.5 px-4 w-32 text-center">Formations done</th>
+                                <th class="py-3.5 px-4 w-56 text-center whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="memberTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -270,7 +271,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="h-4"></div>
+                <div id="memberPagination" class="flex justify-center px-4 sm:px-6 py-3 border-t border-pastoral-100 dark:border-slate-700"></div>
             </div>
 
             <!-- TAB 2: FORMATION SUMMARY -->
@@ -278,7 +279,6 @@
                 <div class="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <h2 class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100">Formation tracks</h2>
-                        <p class="text-[11px] text-slate-400">How many members have completed each formation module.</p>
                     </div>
                 </div>
                 <div class="overflow-x-auto border border-pastoral-100 dark:border-slate-700 rounded-xl w-full">
@@ -303,7 +303,6 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div>
                         <h2 class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100">Cluster Finance Tracker</h2>
-                        <p class="text-[11px] text-slate-400">Manage income, tithes, contributions, and expenses.</p>
                     </div>
                     <button onclick="openAddTransactionModal()" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-4 py-2 rounded-lg font-bold text-xs transition">+ Add Transaction</button>
                 </div>
@@ -328,6 +327,7 @@
                     <table class="responsive-table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-pastoral-800 text-white text-[10px] font-semibold">
+                                <th class="py-3 px-4 w-10 text-center">#</th>
                                 <th class="py-3 px-4">Date</th>
                                 <th class="py-3 px-4">Description</th>
                                 <th class="py-3 px-4">Type</th>
@@ -340,6 +340,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="financePagination" class="flex justify-center py-3"></div>
             </div>
 
             <!-- TAB 4: CALENDAR DATE -->
@@ -347,7 +348,6 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div>
                         <h2 id="calendarMonthTitle" class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100"></h2>
-                        <p class="text-[11px] text-slate-400">Cluster schedule and activities calendar.</p>
                     </div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <button onclick="changeMonth(-1)" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition min-h-[38px]" title="Previous month">&larr;</button>
@@ -379,7 +379,6 @@
                         <div class="flex justify-between items-center mb-2">
                             <div>
                                 <h2 class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100">Activity history</h2>
-                                <p class="text-[11px] text-slate-400">A running log of changes made in this tracker.</p>
                             </div>
                             <button onclick="clearHistoryLogs()" class="text-[10px] text-red-500 hover:text-red-700 font-semibold underline shrink-0">Clear</button>
                         </div>
@@ -390,7 +389,6 @@
                         <div class="flex justify-between items-center mb-2">
                             <div>
                                 <h2 class="font-serif-display text-base font-semibold text-slate-800 dark:text-slate-100">Saved backups</h2>
-                                <p class="text-[11px] text-slate-400">Snapshots saved automatically.</p>
                             </div>
                             <button onclick="createManualBackup()" class="text-[10px] text-pastoral-700 dark:text-emerald-400 hover:text-pastoral-900 font-semibold underline shrink-0">Back up now</button>
                         </div>
@@ -426,7 +424,7 @@
     </div>
 
     <div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-md w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden max-h-[92vh] overflow-y-auto">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-lg w-full border border-pastoral-100 dark:border-slate-700 overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="bg-pastoral-800 text-white px-6 py-3.5 flex justify-between items-center font-semibold text-xs">
                 <span id="addModalTitle" class="tracking-wide">Add New Member</span>
                 <button onclick="closeAddModal()" class="text-pastoral-200 hover:text-white font-bold text-base transition">✕</button>
@@ -469,6 +467,21 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="pt-1">
+                    <button type="button" onclick="toggleAddFormFormationSection()" id="addFormFormationToggleBtn" class="w-full flex items-center justify-between gap-3 text-left px-4 py-3 rounded-xl border border-pastoral-200 dark:border-slate-600 bg-pastoral-50 dark:bg-slate-900/60 hover:bg-pastoral-100 dark:hover:bg-slate-800 transition">
+                        <span class="flex items-center gap-3 min-w-0">
+                            <span class="w-9 h-9 rounded-full bg-pastoral-700 text-white flex items-center justify-center text-sm shrink-0 shadow-sm">📖</span>
+                            <span class="min-w-0">
+                                <span class="block font-semibold text-slate-800 dark:text-slate-100">Formation progress</span>
+                                <span id="addFormFormationCountLabel" class="block text-[10px] text-slate-400">Optional — set now to skip a step</span>
+                            </span>
+                        </span>
+                        <span id="addFormFormationChevron" class="text-pastoral-700 dark:text-slate-300 text-base transition-transform shrink-0">▾</span>
+                    </button>
+                    <div id="addFormFormationSection" class="hidden mt-2 space-y-1.5 max-h-56 overflow-y-auto pr-1 pl-0.5"></div>
+                </div>
+
                 <div class="pt-3 flex justify-end gap-2">
                     <button type="button" onclick="closeAddModal()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-medium transition">Cancel</button>
                     <button type="submit" class="bg-pastoral-800 hover:bg-pastoral-900 text-white px-5 py-2 rounded-lg font-medium shadow-sm transition">Save member</button>
@@ -644,6 +657,15 @@
         let currentActiveMemberId = null;
 
         let currentCalendarDate = new Date();
+
+        // --- Pagination state ---
+        const MEMBERS_PER_PAGE = 10;
+        const FINANCE_PER_PAGE = 10;
+        let memberPage = 1;
+        let financePage = 1;
+
+        // --- Add/Edit member modal: inline formation progress state ---
+        let addFormProgress = {};
 
         // Dark Mode
         if (localStorage.getItem('yfc_theme') === 'dark' || (!('yfc_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -913,6 +935,50 @@
             if (tab === 'history') { renderHistoryLogs(); renderBackupList(); }
         }
 
+        // --- Generic pagination bar builder ---
+        // Renders a single, centered control: [‹ Prev] [Page X of Y — A–B of Z] [Next ›]
+        // Everything lives in one row at the bottom of the table — nothing is split to opposite sides.
+        function buildPaginationControls(containerId, totalItems, perPage, currentPage, onPageChange) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            if (totalItems === 0) return;
+
+            const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+            const startItem = (currentPage - 1) * perPage + 1;
+            const endItem = Math.min(currentPage * perPage, totalItems);
+
+            const wrap = document.createElement('div');
+            wrap.className = "inline-flex items-center gap-1 bg-pastoral-50 dark:bg-slate-900/60 border border-pastoral-100 dark:border-slate-700 rounded-full p-1";
+
+            const navBtnClass = "flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white dark:hover:bg-slate-700 hover:shadow-xs transition shrink-0";
+
+            const prevBtn = document.createElement('button');
+            prevBtn.type = 'button';
+            prevBtn.innerHTML = '‹';
+            prevBtn.title = 'Previous page';
+            prevBtn.disabled = currentPage <= 1;
+            prevBtn.className = navBtnClass;
+            prevBtn.onclick = () => onPageChange(currentPage - 1);
+            wrap.appendChild(prevBtn);
+
+            const pageLabel = document.createElement('span');
+            pageLabel.className = "px-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap";
+            pageLabel.innerHTML = `Page ${currentPage} of ${totalPages} <span class="text-slate-400 font-normal">(${startItem}–${endItem} of ${totalItems})</span>`;
+            wrap.appendChild(pageLabel);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.innerHTML = '›';
+            nextBtn.title = 'Next page';
+            nextBtn.disabled = currentPage >= totalPages;
+            nextBtn.className = navBtnClass;
+            nextBtn.onclick = () => onPageChange(currentPage + 1);
+            wrap.appendChild(nextBtn);
+
+            container.appendChild(wrap);
+        }
+
         // --- Finance Tracker Functions (Cloud Synced) ---
         function openAddTransactionModal() {
             document.getElementById('addTransactionModal').classList.remove('hidden');
@@ -937,6 +1003,7 @@
             try {
                 await db.collection("finance").add(newTrans);
                 logActivity(`Added finance transaction: ${desc} (₱${amount})`);
+                financePage = 1;
                 closeAddTransactionModal();
             } catch (err) {
                 console.error("Error saving transaction: ", err);
@@ -957,6 +1024,11 @@
             });
         }
 
+        function goToFinancePage(page) {
+            financePage = page;
+            renderFinanceTracker();
+        }
+
         function renderFinanceTracker() {
             const tbody = document.getElementById('financeTableBody');
             if (!tbody) return;
@@ -964,22 +1036,31 @@
 
             let totalIn = 0;
             let totalOut = 0;
+            financeTransactions.forEach(t => {
+                if (t.type === 'In') totalIn += t.amount; else totalOut += t.amount;
+            });
 
-            if (financeTransactions.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 italic">No financial transactions recorded.</td></tr>`;
+            const sorted = [...financeTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const totalPages = Math.max(1, Math.ceil(sorted.length / FINANCE_PER_PAGE));
+            if (financePage > totalPages) financePage = totalPages;
+            if (financePage < 1) financePage = 1;
+
+            const pageItems = sorted.slice((financePage - 1) * FINANCE_PER_PAGE, financePage * FINANCE_PER_PAGE);
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">No financial transactions recorded.</td></tr>`;
             }
 
-            financeTransactions.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(t => {
-                if (t.type === 'In') totalIn += t.amount;
-                else totalOut += t.amount;
-
+            pageItems.forEach((t, idx) => {
+                const rowNum = (financePage - 1) * FINANCE_PER_PAGE + idx + 1;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td data-label="Date" class="py-3 px-4">${t.date}</td>
-                    <td data-label="Description" class="py-3 px-4 font-semibold">${t.desc}</td>
-                    <td data-label="Type" class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'In' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${t.type === 'In' ? 'Funds In' : 'Expense'}</span></td>
-                    <td data-label="Amount" class="py-3 px-4 text-right font-mono font-bold ${t.type === 'In' ? 'text-emerald-600' : 'text-red-500'}">₱${t.amount.toFixed(2)}</td>
-                    <td data-label="Action" class="py-3 px-4 text-center"><button onclick="deleteTransaction('${t.firebaseId}')" class="text-red-500 font-bold hover:underline">✕</button></td>
+                    <td data-label="#" class="py-3.5 px-4 text-center text-slate-400 font-mono">${rowNum}</td>
+                    <td data-label="Date" class="py-3.5 px-4">${t.date}</td>
+                    <td data-label="Description" class="py-3.5 px-4 font-semibold">${t.desc}</td>
+                    <td data-label="Type" class="py-3.5 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'In' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">${t.type === 'In' ? 'Funds In' : 'Expense'}</span></td>
+                    <td data-label="Amount" class="py-3.5 px-4 text-right font-mono font-bold ${t.type === 'In' ? 'text-emerald-600' : 'text-red-500'}">₱${t.amount.toFixed(2)}</td>
+                    <td data-label="Action" class="py-3.5 px-4 text-center whitespace-nowrap"><button onclick="deleteTransaction('${t.firebaseId}')" class="text-red-500 hover:text-red-700 font-bold w-6 h-6 inline-flex items-center justify-center transition">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -987,6 +1068,8 @@
             document.getElementById('financeTotalIn').innerText = `₱${totalIn.toFixed(2)}`;
             document.getElementById('financeTotalOut').innerText = `₱${totalOut.toFixed(2)}`;
             document.getElementById('financeBalance').innerText = `₱${(totalIn - totalOut).toFixed(2)}`;
+
+            buildPaginationControls('financePagination', sorted.length, FINANCE_PER_PAGE, financePage, goToFinancePage);
         }
 
         // --- Calendar Functions (Cloud Synced) ---
@@ -1184,12 +1267,24 @@
             const searchInput = document.getElementById('searchInput');
             const clearBtn = document.getElementById('clearSearchBtn');
             clearBtn.style.display = searchInput.value.trim().length > 0 ? 'flex' : 'none';
+            memberPage = 1;
             renderTable();
         }
 
         function clearSearch() {
             document.getElementById('searchInput').value = '';
             document.getElementById('clearSearchBtn').style.display = 'none';
+            memberPage = 1;
+            renderTable();
+        }
+
+        function handleChapterFilterChange() {
+            memberPage = 1;
+            renderTable();
+        }
+
+        function goToMemberPage(page) {
+            memberPage = page;
             renderTable();
         }
 
@@ -1212,12 +1307,20 @@
             document.getElementById('statChapter1').innerText = members.filter(m => m.chapter === "Chapter 1").length;
             document.getElementById('statChapter2').innerText = members.filter(m => m.chapter === "Chapter 2").length;
 
+            const totalPages = Math.max(1, Math.ceil(filtered.length / MEMBERS_PER_PAGE));
+            if (memberPage > totalPages) memberPage = totalPages;
+            if (memberPage < 1) memberPage = 1;
+
+            const pageItems = filtered.slice((memberPage - 1) * MEMBERS_PER_PAGE, memberPage * MEMBERS_PER_PAGE);
+
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 italic">No members found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">No members found.</td></tr>`;
+                buildPaginationControls('memberPagination', 0, MEMBERS_PER_PAGE, memberPage, goToMemberPage);
                 return;
             }
 
-            filtered.forEach(m => {
+            pageItems.forEach((m, idx) => {
+                const rowNum = (memberPage - 1) * MEMBERS_PER_PAGE + idx + 1;
                 const completedCount = getCompletedFormationsCount(m);
                 const formattedName = `${m.lastName}, ${m.firstName}`;
                 const nicknameDisplay = m.nickname ? ` <span class="text-slate-400 font-normal">("${m.nickname}")</span>` : '';
@@ -1229,18 +1332,23 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-pastoral-50/60 dark:hover:bg-slate-800/80 transition-colors border-b border-slate-100 dark:border-slate-700/50";
                 tr.innerHTML = `
-                    <td data-label="Member name" class="py-3 px-6 font-bold text-slate-900 dark:text-white">${formattedName}${nicknameDisplay}</td>
-                    <td data-label="Gender / age" class="py-3 px-4"><span class="inline-flex items-center gap-1.5">${genderBadge}<span class="text-[10px] text-slate-400">${ageText}</span></span></td>
-                    <td data-label="Area / chapter" class="py-3 px-4"><span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-full text-[10px]">${m.chapter}</span></td>
-                    <td data-label="Formations done" class="py-3 px-4 text-center"><span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-2.5 py-1 rounded-full text-[10px]">${completedCount} / 11 Done</span></td>
-                    <td data-label="Actions" class="py-3 px-6 text-center flex justify-center items-center gap-2">
-                        <button onclick="openFormationModal('${m.firebaseId}')" class="bg-pastoral-700 hover:bg-pastoral-800 text-white px-3.5 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition active:scale-95">Formation</button>
-                        <button onclick="openEditModal('${m.firebaseId}')" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition">Edit</button>
-                        <button onclick="deleteMember('${m.firebaseId}')" class="text-slate-400 hover:text-red-600 font-bold px-1 transition text-sm" title="Delete">✕</button>
+                    <td data-label="#" class="py-3.5 px-4 text-center text-slate-400 font-mono">${rowNum}</td>
+                    <td data-label="Member name" class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">${formattedName}${nicknameDisplay}</td>
+                    <td data-label="Gender / age" class="py-3.5 px-4"><span class="inline-flex items-center gap-1.5">${genderBadge}<span class="text-[10px] text-slate-400 whitespace-nowrap">${ageText}</span></span></td>
+                    <td data-label="Area / chapter" class="py-3.5 px-4"><span class="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-full text-[10px]">${m.chapter}</span></td>
+                    <td data-label="Formations done" class="py-3.5 px-4 text-center"><span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold px-2.5 py-1 rounded-full text-[10px] whitespace-nowrap">${completedCount} / 11 Done</span></td>
+                    <td data-label="Actions" class="py-3.5 px-4 text-center whitespace-nowrap">
+                        <div class="flex flex-nowrap justify-center items-center gap-1.5">
+                            <button onclick="openFormationModal('${m.firebaseId}')" class="shrink-0 bg-pastoral-700 hover:bg-pastoral-800 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-semibold shadow-sm transition active:scale-95">Formation</button>
+                            <button onclick="openEditModal('${m.firebaseId}')" class="shrink-0 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition">Edit</button>
+                            <button onclick="deleteMember('${m.firebaseId}')" class="shrink-0 text-slate-400 hover:text-red-600 font-bold w-6 h-6 flex items-center justify-center transition text-sm" title="Delete">✕</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            buildPaginationControls('memberPagination', filtered.length, MEMBERS_PER_PAGE, memberPage, goToMemberPage);
         }
 
         function renderFormationSummary() {
@@ -1349,10 +1457,79 @@
             renderTable();
         }
 
+        // --- Inline formation progress editor inside the Add/Edit Member modal ---
+        function toggleAddFormFormationSection() {
+            const section = document.getElementById('addFormFormationSection');
+            const chevron = document.getElementById('addFormFormationChevron');
+            const isHidden = section.classList.contains('hidden');
+            section.classList.toggle('hidden');
+            chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        function updateAddFormFormationCountLabel() {
+            const label = document.getElementById('addFormFormationCountLabel');
+            if (!label) return;
+            let completed = 0;
+            formationsData.forEach(f => {
+                const arr = addFormProgress[f.code];
+                if (Array.isArray(arr) && arr.filter(Boolean).length === f.talks) completed++;
+            });
+            label.innerText = completed > 0
+                ? `${completed} of ${formationsData.length} formations completed`
+                : 'Optional — set now to skip a step';
+        }
+
+        function renderAddFormFormationList() {
+            const container = document.getElementById('addFormFormationSection');
+            if (!container) return;
+            container.innerHTML = '';
+            updateAddFormFormationCountLabel();
+
+            formationsData.forEach((f, index) => {
+                if (!addFormProgress[f.code] || !Array.isArray(addFormProgress[f.code]) || addFormProgress[f.code].length !== f.talks) {
+                    addFormProgress[f.code] = new Array(f.talks).fill(false);
+                }
+                const talksStatus = addFormProgress[f.code];
+                const attendedCount = talksStatus.filter(Boolean).length;
+                const isComplete = attendedCount === f.talks;
+
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between gap-2 p-2.5 border border-pastoral-100 dark:border-slate-700 rounded-lg bg-pastoral-50/50 dark:bg-slate-900";
+                row.innerHTML = `
+                    <div class="min-w-0">
+                        <span class="font-extrabold text-pastoral-700 dark:text-emerald-400">${f.code}</span>
+                        <span class="text-slate-600 dark:text-slate-300"> - ${f.label}</span>
+                        <span class="block text-[10px] text-slate-400">${attendedCount} of ${f.talks} talks</span>
+                    </div>
+                    <button type="button" onclick="toggleAddFormFormation(${index})" class="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold transition shadow-xs ${isComplete ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200'}">
+                        ${isComplete ? '✓ Completed' : 'Mark complete'}
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function toggleAddFormFormation(formationIndex) {
+            const f = formationsData[formationIndex];
+            const talksStatus = addFormProgress[f.code] || new Array(f.talks).fill(false);
+            const attendedCount = talksStatus.filter(Boolean).length;
+            const isComplete = attendedCount === f.talks;
+            addFormProgress[f.code] = new Array(f.talks).fill(!isComplete);
+            renderAddFormFormationList();
+        }
+
+        function resetAddFormFormationSection() {
+            addFormProgress = {};
+            document.getElementById('addFormFormationSection').classList.add('hidden');
+            document.getElementById('addFormFormationChevron').style.transform = 'rotate(0deg)';
+            renderAddFormFormationList();
+        }
+
         function openAddModal() {
             document.getElementById('editMemberId').value = '';
             document.getElementById('addModalTitle').innerText = 'Add New Member';
             document.querySelector('#addModal form').reset();
+            resetAddFormFormationSection();
             document.getElementById('addModal').classList.remove('hidden');
             document.getElementById('addModal').classList.add('flex');
         }
@@ -1367,6 +1544,11 @@
             document.getElementById('addGender').value = member.gender || 'Male';
             document.getElementById('addBirthday').value = member.birthday || '';
             document.getElementById('addChapter').value = member.chapter;
+
+            addFormProgress = JSON.parse(JSON.stringify(member.progress || {}));
+            document.getElementById('addFormFormationSection').classList.add('hidden');
+            document.getElementById('addFormFormationChevron').style.transform = 'rotate(0deg)';
+            renderAddFormFormationList();
 
             document.getElementById('addModal').classList.remove('hidden');
             document.getElementById('addModal').classList.add('flex');
@@ -1387,6 +1569,15 @@
             const birthday = document.getElementById('addBirthday').value;
             const chapter = document.getElementById('addChapter').value;
 
+            // Normalize progress arrays to the correct talk counts before saving
+            const progressToSave = {};
+            formationsData.forEach(f => {
+                const existing = addFormProgress[f.code];
+                progressToSave[f.code] = (Array.isArray(existing) && existing.length === f.talks)
+                    ? existing
+                    : new Array(f.talks).fill(false);
+            });
+
             if (editFirebaseId) {
                 const member = members.find(m => m.firebaseId === editFirebaseId);
                 if (member) {
@@ -1396,6 +1587,7 @@
                     member.gender = gender;
                     member.birthday = birthday;
                     member.chapter = chapter;
+                    member.progress = progressToSave;
                     logActivity(`Updated info for member: ${lastName}, ${firstName}`);
                     saveMemberToCloud({ ...member });
                 }
@@ -1407,10 +1599,11 @@
                     gender: gender,
                     birthday: birthday,
                     chapter: chapter,
-                    progress: {}
+                    progress: progressToSave
                 };
                 logActivity(`Added new member: ${lastName}, ${firstName}`);
                 saveMemberToCloud(newMember);
+                memberPage = 1;
             }
 
             closeAddModal();
